@@ -24,9 +24,15 @@ credentials:
       password: $2b$12$D7GlmFUSpOADkxeCEIkIBuu8/hVanzw2VIVSu1APxupFJtZrFTtT.
     test2:
       email: test2@gmail.com
+      failed_login_attempts: 0
       logged_in: false
       name: test kedua
       password: $2b$12$KUSu8PRYNloKwgj8wtQfkuh8BQIEHMl17wZCiCdXFqSdg3arhf4Q6
+    test3:
+      email: test3@gmail.com
+      logged_in: false
+      name: testttt
+      password: $2b$12$ShQN76q7GhcC7dh7SXBThexrN7hHETxGsR0NUKuto1vsqVoiivLJS
 pre-authorized:
   emails:
   - melsby@gmail.com

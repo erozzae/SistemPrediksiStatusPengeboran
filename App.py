@@ -9,10 +9,12 @@ from yaml.loader import SafeLoader
 from streamlit_option_menu import option_menu
 from PIL import Image
 import json
+from datetime import datetime, time
 
  #visualisation             
 import matplotlib.pyplot as plt 
 import seaborn as sns  
+sns.set(color_codes=True)
 
 st.set_page_config(
     page_title="Aplikasi Prediksi Status Pengeboran",
@@ -61,11 +63,67 @@ def beranda():
     st.write('di Aplikasi Sistem Prediksi Status Pengeboran PT. Parama Data Unit')
     st.image("drilling.png", width=200)
 
-
+@st.cache_resource
 def load_json(file_path):
     with open(file_path, 'r') as file:
         data = json.load(file)
     return data
+
+def stuck_percentage(df):
+    # Asumsikan df adalah DataFrame yang telah diinisialisasi sebelumnya
+    data = df['Stuck'].value_counts(normalize=True) * 100  # Menghitung persentase
+    data
+
+    # Warna untuk setiap bar: hijau untuk 'Tidak Stuck' dan merah untuk 'Stuck'
+    colors = ['green', 'red']
+
+    # Membuat bar plot
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x=data.index, y=data.values, palette=colors)
+
+    # Menambahkan label dan judul
+    plt.xlabel('')
+    plt.ylabel('Persentase (%)')
+    plt.title('Persentase Stuck')
+    plt.xticks([0, 1], ['Tidak Stuck', 'Stuck'])
+
+    # Menambahkan label persentase di atas bar
+    for i, v in enumerate(data.values):
+        plt.text(i, v + 1, f"{v:.2f}%", ha='center', va='bottom')
+
+    # Menampilkan plot
+    plt.show()
+
+def time_filter():
+    st.title('Filter Waktu')
+
+    # Filter Tanggal (hanya satu tanggal)
+    selected_date = st.date_input('Pilih Tanggal')
+
+    # Filter Waktu (setiap jam)
+    selected_hour = st.selectbox(
+        'Pilih Jam:',
+        [time(hour) for hour in range(24)]
+    )
+
+    # Konversi tanggal dan waktu yang dipilih menjadi objek datetime lengkap
+    if selected_date:
+        selected_datetime = datetime.combine(selected_date, selected_hour)
+        return selected_datetime, selected_date
+
+def data_filter_by_time(date, hour):
+    well_A_path = os.path.abspath('WELL_C.csv')
+    df = pd.read_csv(well_A_path)
+    df['Date-Time'] = pd.to_datetime(df['Date-Time'])
+
+    # Filter data untuk waktu tertentu
+    filtered_data = df[(df['Date-Time'].dt.date == pd.to_datetime(date).date()) &
+                    (df['Date-Time'].dt.hour == hour) &
+                    (df['Date-Time'].dt.minute == 0) &
+                    (df['Date-Time'].dt.second == 0)]
+
+    return filtered_data
+
 
 def beranda_logged_in():
     with st.sidebar:
@@ -116,13 +174,6 @@ def beranda_logged_in():
                 # Convert JSON to DataFrame
                 df = pd.DataFrame(data_array)
                 st.dataframe(df)
-                # col1, col2 = st.columns([7,5])
-                # with col1:
-                #     st.write('Data yang diunggah')
-                #     st.dataframe(selected_data)
-                # with col2:
-                #     st.write('Hasil Prediksi')
-                #     st.dataframe(predictions_hg)
 
                 if(predictions_hgb == 0):
                     st.success('Pengeboran normal, tidak stuck')
@@ -148,6 +199,18 @@ def beranda_logged_in():
             well_A_path = os.path.abspath('WELL_C.csv')
             df = pd.read_csv(well_A_path)
             st.dataframe(df)
+            stuck_percentage(df)
+
+            #set datetime
+            selected_datetime, selected_date  = time_filter()
+            st.write(selected_datetime)
+            # st.write(selected_date)
+            # st.write(selected_datetime.hour)
+            
+            #filter data by datetime
+            filtered_data_by_datetime = data_filter_by_time(selected_date, selected_datetime.hour)
+            st.dataframe(filtered_data_by_datetime)
+
         elif visual_option == "Sumur B":
             st.header('Sumur B')
             st.dataframe(selected_data)
