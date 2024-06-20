@@ -72,27 +72,53 @@ def load_json(file_path):
 def stuck_percentage(df):
     # Asumsikan df adalah DataFrame yang telah diinisialisasi sebelumnya
     data = df['Stuck'].value_counts(normalize=True) * 100  # Menghitung persentase
-    data
 
     # Warna untuk setiap bar: hijau untuk 'Tidak Stuck' dan merah untuk 'Stuck'
     colors = ['green', 'red']
 
     # Membuat bar plot
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x=data.index, y=data.values, palette=colors)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.barplot(x=data.index, y=data.values, palette=colors, ax=ax)
 
     # Menambahkan label dan judul
-    plt.xlabel('')
-    plt.ylabel('Persentase (%)')
-    plt.title('Persentase Stuck')
-    plt.xticks([0, 1], ['Tidak Stuck', 'Stuck'])
+    ax.set_xlabel('')
+    ax.set_ylabel('Persentase (%)')
+    ax.set_title('Persentase Stuck')
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels(['Tidak Stuck', 'Stuck'])
 
     # Menambahkan label persentase di atas bar
     for i, v in enumerate(data.values):
-        plt.text(i, v + 1, f"{v:.2f}%", ha='center', va='bottom')
+        ax.text(i, v + 1, f"{v:.2f}%", ha='center', va='bottom')
 
-    # Menampilkan plot
-    plt.show()
+    # Menampilkan plot di Streamlit
+    st.pyplot(fig)
+
+def data_visual_of_drilling(df):
+    # Ambil data dari baris pertama untuk visualisasi
+    filtered_data = df.iloc[:,1:]
+    data_first_row = filtered_data.iloc[0]
+
+    # Plotting
+    fig, ax = plt.subplots(figsize=(40, 10))
+
+    # Menentukan warna yang berbeda untuk setiap bar
+    colors = plt.cm.get_cmap('tab10', len(data_first_row))
+
+    # Plotting bars
+    bars = ax.bar(data_first_row.index, data_first_row.values, color=colors(np.arange(len(data_first_row))))
+
+    # Menambahkan label dan judul
+    ax.set_xlabel('Kolom')
+    ax.set_ylabel('Nilai')
+    ax.set_title('Bar Plot Data Pengeboran')
+
+    # Menampilkan nilai di atas setiap bar
+    for bar, value in zip(bars, data_first_row.values):
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() - 0.05, round(value, 2), ha='center', va='bottom')
+
+    # Menampilkan grafik di Streamlit
+    st.pyplot(fig)
 
 def time_filter():
     st.title('Filter Waktu')
@@ -111,9 +137,7 @@ def time_filter():
         selected_datetime = datetime.combine(selected_date, selected_hour)
         return selected_datetime, selected_date
 
-def data_filter_by_time(date, hour):
-    well_A_path = os.path.abspath('WELL_C.csv')
-    df = pd.read_csv(well_A_path)
+def data_filter_by_time(df, date, hour):
     df['Date-Time'] = pd.to_datetime(df['Date-Time'])
 
     # Filter data untuk waktu tertentu
@@ -196,27 +220,60 @@ def beranda_logged_in():
         selected_data = st.session_state.get('data_frame')
         if visual_option == "Sumur A":
             st.header('Sumur A')
-            well_A_path = os.path.abspath('WELL_C.csv')
-            df = pd.read_csv(well_A_path)
+            well_path = os.path.abspath('WELL_A.csv')
+            df = pd.read_csv(well_path)
             st.dataframe(df)
             stuck_percentage(df)
 
             #set datetime
             selected_datetime, selected_date  = time_filter()
             st.write(selected_datetime)
-            # st.write(selected_date)
-            # st.write(selected_datetime.hour)
             
             #filter data by datetime
-            filtered_data_by_datetime = data_filter_by_time(selected_date, selected_datetime.hour)
+            filtered_data_by_datetime = data_filter_by_time(df, selected_date, selected_datetime.hour)
             st.dataframe(filtered_data_by_datetime)
+
+            #data visualization of drilling
+            if not filtered_data_by_datetime['Date-Time'].isna().all():
+                data_visual_of_drilling(filtered_data_by_datetime)
 
         elif visual_option == "Sumur B":
             st.header('Sumur B')
-            st.dataframe(selected_data)
+            well_path = os.path.abspath('WELL_B.csv')
+            df = pd.read_csv(well_path)
+            st.dataframe(df)
+            stuck_percentage(df)
+
+            #set datetime
+            selected_datetime, selected_date  = time_filter()
+            st.write(selected_datetime)
+            
+            #filter data by datetime
+            filtered_data_by_datetime = data_filter_by_time(df, selected_date, selected_datetime.hour)
+            st.dataframe(filtered_data_by_datetime)
+
+            #data visualization of drilling
+            if not filtered_data_by_datetime['Date-Time'].isna().all():
+                data_visual_of_drilling(filtered_data_by_datetime)
+
         elif visual_option == "Sumur C":
             st.header('Sumur C')
-            st.dataframe(selected_data)
+            well_path = os.path.abspath('WELL_C.csv')
+            df = pd.read_csv(well_path)
+            st.dataframe(df)
+            stuck_percentage(df)
+
+            #set datetime
+            selected_datetime, selected_date  = time_filter()
+            st.write(selected_datetime)
+            
+            #filter data by datetime
+            filtered_data_by_datetime = data_filter_by_time(df, selected_date, selected_datetime.hour)
+            st.dataframe(filtered_data_by_datetime)
+
+            #data visualization of drilling
+            if not filtered_data_by_datetime['Date-Time'].isna().all():
+                data_visual_of_drilling(filtered_data_by_datetime)
         else:
             st.warning("Belum ada data")
            
