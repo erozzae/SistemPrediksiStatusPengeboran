@@ -153,60 +153,85 @@ def beranda_logged_in():
     with st.sidebar:
         selected=option_menu(
             menu_title='Menu',
-            options=['Prediksi','Visualisasi','Sumber data'],
+            options=['Prediksi','Sumber data'],
             default_index=0,
         )
     if selected == "Prediksi":
         st.write('Silahkan untuk melakukan prediksi status pengeboran')
         model_path = os.path.abspath('hgb_model.pkl')
-        loaded_model_hgb = joblib.load(model_path)
+        loaded_model = joblib.load(model_path)
 
-        uploaded_file = st.file_uploader("Pilih file Excel", type=["xlsx", "xls"])
+        # uploaded_file = st.file_uploader("Pilih file Excel", type=["xlsx", "xls"])
         
         # Jika ada file yang di-upload
-        if uploaded_file is not None:
-                df = load_excel_file(uploaded_file)
-                st.session_state['data_frame'] = df
+        # if uploaded_file is not None:
+        #         df = load_excel_file(uploaded_file)
+        #         st.session_state['data_frame'] = df
 
-        if st.session_state['data_frame'] is not None:
-                # Meenyeleksi kolom
-                selected_data = st.session_state['data_frame'][['BitDepth','Scfm','BVDepth','MudTempIn','MudTempOut','Stuck']]
+        drilling_data_json = st.text_area("Masukan Data Pengeboran (JSON)")
+        pred_btn = st.button("Prediksi", type="primary")
 
-                # Data Preprocessing
-                selected_data_np = np.array(selected_data)
-                selected_data_float = selected_data_np.astype(float)
-                
-                # PH = 5 menit
-                n_steps_in = 60
-                X_Test = selected_data_float.reshape((1, selected_data_float.shape[0]*selected_data_float.shape[1]))
-                print(X_Test.shape)
+        if 'data_frame' not in st.session_state:
+            st.session_state['data_frame']
 
-                # Menggunakan model yang dimuat untuk membuat prediksi
-                predictions_hgb = loaded_model_hgb.predict(X_Test)
-            
-                predictions_hg = pd.DataFrame(predictions_hgb, columns=['Stuck'])
+        if pred_btn or st.session_state['data_frame'] is not None:
+            if drilling_data_json:
+                try:
+                    # Load JSON data
+                    data = json.loads(drilling_data_json)
 
-                st.write('Data yang diunggah')
-                # Load JSON data from file
-                json_file_path = 'test_data.json'
-                
-                data = load_json(json_file_path)
+                    # Convert to DataFrame
+                    data_array = data["data"]
+                    df = pd.DataFrame(data_array)
+                    st.session_state['data_frame'] =  df
 
-                # Extract the data array
-                data_array = data["data"]
+                except json.JSONDecodeError:
+                    st.error("Format JSON tidak benar")
 
-                # Convert JSON to DataFrame
-                df = pd.DataFrame(data_array)
-                st.dataframe(df)
+                except ValueError as e:
+                    # st.error(f"Error converting JSON to DataFrame: {e}")
+                    st.error("Terjadi kesalahan")
 
-                if(predictions_hgb == 0):
-                    st.success('Pengeboran normal, tidak stuck')
-                else:
-                    st.danger('Pengeboran stuck')
+            else:
+                st.info("Silakan masukan data pengebroan lima menit terakhir (30 kumpulan data)")
 
+            if st.session_state['data_frame'] is not None:
+                try:
+                    # Meenyeleksi kolom
+                    selected_data = st.session_state['data_frame'][['BitDepth','BVDepth','Scfm','LogDepth','Hkld','Stuck']]
+
+                    # Data Preprocessing
+                    selected_data_np = np.array(selected_data)
+                    selected_data_float = selected_data_np.astype(float)
+                    
+                    # PH = 5 menit
+                    n_steps_in = 30
+                    X_Test = selected_data_float.reshape((1, selected_data_float.shape[0]*selected_data_float.shape[1]))
+                    print(X_Test.shape)
+
+                    # Menggunakan model yang dimuat untuk membuat prediksi
+                    predictions = loaded_model.predict(X_Test)
+
+                    st.write('Data yang diunggah')
+
+                    # Convert JSON to DataFrame
+                    # df = pd.DataFrame(st.session_state['data_frame'])
+                    st.dataframe(st.session_state['data_frame'])
+
+                    if(predictions == 0):
+                        st.success('Pengeboran normal, tidak stuck')
+                    else:
+                        st.danger('Pengeboran stuck')
+
+                except json.JSONDecodeError:
+                    st.error("Format JSON tidak benar")
+
+                except ValueError as e:
+                    # st.error(f"Error converting JSON to DataFrame: {e}")
+                    st.error("Terjadi kesalahan")
         # Jika tidak ada file yang di-upload
         else:
-            st.info("Silakan upload file Excel untuk melihat data.")
+            st.info("Silakan masukan data pengebroan lima menit terakhir (30 kumpulan data)")
 
     if selected == "Sumber data":
         st.write('Berikut adalah sumber data pengeboran')
