@@ -231,7 +231,7 @@ def beranda_logged_in():
                     st.error("Terjadi kesalahan")
         # Jika tidak ada file yang di-upload
         else:
-            st.info("Silakan data pengebroan lima menit terakhir (30 kumpulan data)")
+            st.info("Silakan masukan data pengebroan lima menit terakhir (30 kumpulan data)")
 
     if selected == "Sumber data":
         st.write('Berikut adalah sumber data pengeboran')
