@@ -56,13 +56,13 @@ def load_excel_file(uploaded_file):
         df.set_index(['Date-Time'], inplace=True)
         return df
     except Exception as e:
-        st.error(f"Terjadi kesalahan saat membaca file: {e}")
+        st.error(f"An error occurred while reading the file: {e}")
         return None
 
 
 def beranda():
-    st.title('Selamat Datang!!')
-    st.write('di Aplikasi Sistem Prediksi Status Pengeboran PT. Parama Data Unit')
+    st.title('Welcome!!')
+    st.write('In the Drilling Status Prediction System Application of PT. Parama Data Unit')
     st.image("drilling.png", width=200)
 
 @st.cache_resource
@@ -111,31 +111,103 @@ def data_visual_of_drilling_by_hour(filtered_data_by_datetime):
     filtered_data_by_datetime.loc[:, 'Date-Time'] = pd.to_datetime(filtered_data_by_datetime.loc[:, 'Date-Time'])
 
     # Judul aplikasi
-    st.title('Visualisasi Data dengan Streamlit dan Altair')
+    st.title('Data Visualization')
 
     # Multiselect untuk memilih kolom
-    columns = st.multiselect('Pilih kolom untuk divisualisasikan', filtered_data_by_datetime.iloc[:,1:].columns)
+    # columns = st.multiselect('Pilih kolom untuk divisualisasikan', filtered_data_by_datetime.iloc[:,1:].columns)
+    
+    #Visualisasi
+    # Mengubah data dari wide format ke long format
+    datas_1 = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,1:7].columns)
+    datas_2 = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,7:13].columns)
+    datas_3 = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,13:18].columns)
+    datas_4 = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,18:22].columns)
+    # Membuat layout grid dengan 2 kolom dan 2 baris
+    col1, col2 = st.columns(2)
+    col3, col4 = st.columns(2)
 
-    # Visualisasi dengan Altair jika ada kolom yang dipilih
-    if columns:       
-        # Mengubah data dari wide format ke long format
-        data_long = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=columns)
-                        
-        # Inisialisasi chart dengan Altair
-        chart = alt.Chart(data_long).mark_line().encode(
-            x='Date-Time:T',  # Menggunakan kolom 'Date-Time' sebagai sumbu x
-            y='Value:Q',  # Menggunakan nilai dari kolom yang dipilih sebagai sumbu y
+    
+    # Inisialisasi chart dengan Altair
+    with col1:
+        st.write('Graph 1')
+        chart = alt.Chart(datas_1).mark_line().encode(
+            x='Value:Q',  # Menggunakan kolom 'Date-Time' sebagai sumbu x
+            y= 'Date-Time:T',  # Menggunakan nilai dari kolom yang dipilih sebagai sumbu y
             color='Variable:N',  # Warna berdasarkan kolom yang dipilih
             tooltip=['Date-Time', 'Variable', 'Value']  # Menampilkan tooltip dengan kolom yang relevan
         ).properties(
-             width=800,
+                width=800,
             height=400
         ).interactive()
 
         # Tampilkan plot menggunakan st.altair_chart
         st.altair_chart(chart, use_container_width=True)
-    else:
-        st.write('Pilih setidaknya satu kolom untuk memulai visualisasi.')
+        
+    with col2:
+        st.write('Graph 2')
+        chart = alt.Chart(datas_2).mark_line().encode(
+            x='Value:Q',  # Menggunakan kolom 'Date-Time' sebagai sumbu x
+            y= 'Date-Time:T',  # Menggunakan nilai dari kolom yang dipilih sebagai sumbu y
+            color='Variable:N',  # Warna berdasarkan kolom yang dipilih
+            tooltip=['Date-Time', 'Variable', 'Value']  # Menampilkan tooltip dengan kolom yang relevan
+        ).properties(
+                width=800,
+            height=400
+        ).interactive()
+
+        # Tampilkan plot menggunakan st.altair_chart
+        st.altair_chart(chart, use_container_width=True)
+
+    with col3:
+        st.write('Graph 3')
+        chart = alt.Chart(datas_3).mark_line().encode(
+            x='Value:Q',  # Menggunakan kolom 'Date-Time' sebagai sumbu x
+            y= 'Date-Time:T',  # Menggunakan nilai dari kolom yang dipilih sebagai sumbu y
+            color='Variable:N',  # Warna berdasarkan kolom yang dipilih
+            tooltip=['Date-Time', 'Variable', 'Value']  # Menampilkan tooltip dengan kolom yang relevan
+        ).properties(
+                width=800,
+            height=400
+        ).interactive()
+
+        # Tampilkan plot menggunakan st.altair_chart
+        st.altair_chart(chart, use_container_width=True)
+        
+    with col4:
+        st.write('Graph 4')
+        chart = alt.Chart(datas_4).mark_line().encode(
+            x='Value:Q',  # Menggunakan kolom 'Date-Time' sebagai sumbu x
+            y= 'Date-Time:T',  # Menggunakan nilai dari kolom yang dipilih sebagai sumbu y
+            color='Variable:N',  # Warna berdasarkan kolom yang dipilih
+            tooltip=['Date-Time', 'Variable', 'Value']  # Menampilkan tooltip dengan kolom yang relevan
+        ).properties(
+                width=800,
+            height=400
+        ).interactive()
+
+        # Tampilkan plot menggunakan st.altair_chart
+        st.altair_chart(chart, use_container_width=True)
+
+    # Visualisasi dengan Altair jika ada kolom yang dipilih
+    # if columns:       
+    #     # Mengubah data dari wide format ke long format
+    #     data_long = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=columns)
+                        
+    #     # Inisialisasi chart dengan Altair
+    #     chart = alt.Chart(data_long).mark_line().encode(
+    #         x='Date-Time:T',  # Menggunakan kolom 'Date-Time' sebagai sumbu x
+    #         y='Value:Q',  # Menggunakan nilai dari kolom yang dipilih sebagai sumbu y
+    #         color='Variable:N',  # Warna berdasarkan kolom yang dipilih
+    #         tooltip=['Date-Time', 'Variable', 'Value']  # Menampilkan tooltip dengan kolom yang relevan
+    #     ).properties(
+    #          width=800,
+    #         height=400
+    #     ).interactive()
+
+    #     # Tampilkan plot menggunakan st.altair_chart
+    #     st.altair_chart(chart, use_container_width=True)
+    # else:
+    #     st.write('Pilih setidaknya satu kolom untuk memulai visualisasi.')
 
 def data_filter_by_time(df, date, start_hour, end_hour):
     df['Date-Time'] = pd.to_datetime(df['Date-Time'])
@@ -148,26 +220,26 @@ def data_filter_by_time(df, date, start_hour, end_hour):
     return filtered_data
 
 def time_range_filter():
-    st.title('Filter Waktu')
+    st.title('Time Filter')
 
     # Filter Tanggal (hanya satu tanggal)
-    selected_date = st.date_input('Pilih Tanggal')
+    selected_date = st.date_input('Select Date')
 
     # Filter Jam Awal
     selected_start_hour = st.selectbox(
-        'Pilih Jam Awal:',
+        'Select Start Time:',
         [time(hour) for hour in range(24)]
     )
 
     # Filter Jam Akhir
     selected_end_hour = st.selectbox(
-        'Pilih Jam Akhir:',
+        'Select End Time:',
         [time(hour) for hour in range(24)]
     )
 
     # Validasi jam akhir harus setelah jam awal
     if selected_end_hour < selected_start_hour:
-        st.error('Jam akhir harus setelah jam awal.')
+        st.error('The ending time must be after the starting time.')
         return None, None, None
 
     # Konversi tanggal dan waktu yang dipilih menjadi objek datetime lengkap
@@ -180,16 +252,16 @@ def beranda_logged_in():
     with st.sidebar:
         selected=option_menu(
             menu_title='Menu',
-            options=['Prediksi','Sumber data'],
+            options=['Prediction','Data Source'],
             default_index=0,
         )
-    if selected == "Prediksi":
-        st.write('Silahkan untuk melakukan prediksi status pengeboran')
-        model_path = os.path.abspath('knn_model.pkl')
+    if selected == "Prediction":
+        st.write('Please make predictions about drilling status')
+        model_path = os.path.abspath('knn_model_ph10.pkl')
         loaded_model = joblib.load(model_path)
 
-        drilling_data_json = st.text_area("Masukan Data Pengeboran (JSON)")
-        pred_btn = st.button("Prediksi", type="primary")
+        drilling_data_json = st.text_area("Input drilling data (JSON)")
+        pred_btn = st.button("Prediction", type="primary")
 
         if 'data_frame' not in st.session_state:
             st.session_state['data_frame']
@@ -209,14 +281,14 @@ def beranda_logged_in():
                     st.session_state['data_frame'] =  df
 
                 except json.JSONDecodeError:
-                    st.error("Format JSON tidak benar")
+                    st.error("JSON format is incorrect")
 
                 except ValueError as e:
                     st.error(f"Error converting JSON to DataFrame: {e}")
                     # st.error("Terjadi kesalahan")
 
             else:
-                st.info("Silakan masukan data pengebroan lima menit terakhir (30 kumpulan data)")
+                st.info("Please enter the last five minutes of drilling data (30 data sets)")
 
             if st.session_state['data_frame'] is not None:
                 try:
@@ -233,18 +305,18 @@ def beranda_logged_in():
                     # Menggunakan model yang dimuat untuk membuat prediksi
                     predictions = loaded_model.predict(X_Test)
 
-                    st.write('Data yang telah diunggah sebelumnya')
+                    st.write('Previously uploaded data')
 
                     st.dataframe(st.session_state['data_frame'])
 
                     if(predictions == 0):
-                        st.success('Pengeboran normal, tidak stuck')
+                        st.success('Normal drilling, not stuck')
                     else:
-                        st.error('Pengeboran stuck')
+                        st.error('Drilling stuck')
 
                 except json.JSONDecodeError:
                     st.session_state['data_frame'] = None
-                    st.error("Format JSON tidak benar")
+                    st.error("JSON format is incorrect")
 
                 except ValueError as e:
                     st.session_state['data_frame'] = None
@@ -252,20 +324,20 @@ def beranda_logged_in():
 
         # Jika tidak ada file yang di-upload
         else:
-            st.info("Silakan masukan data pengebroan lima menit terakhir (30 kumpulan data)")
+            st.info("Please enter the last five minutes of drilling data (30 data sets)")
 
-    if selected == "Sumber data":
-        st.write('Berikut adalah sumber data pengeboran')
+    if selected == "Data Source":
+        st.write('The following is the drilling data source')
 
         with st.sidebar:
             visual_option = st.selectbox(
-                "Pilih sumber data",
-                ["Sumur A", "Sumur B", "Sumur C"]
+                "Select a data source",
+                ["Well A", "Well B", "Well C"]
             )
 
         selected_data = st.session_state.get('data_frame')
-        if visual_option == "Sumur A":
-            st.header('Sumur A')
+        if visual_option == "Well A":
+            st.header('Well A')
             well_path = os.path.abspath('WELL_A.csv')
             df = pd.read_csv(well_path)
             st.dataframe(df)
@@ -275,8 +347,8 @@ def beranda_logged_in():
             start_datetime, end_datetime, selected_datetime = time_range_filter()
 
             if start_datetime is not None and end_datetime is not None and selected_datetime is not None:
-                st.write('Jam Mulai : ',start_datetime,)
-                st.write('Jam Mulai : ',end_datetime)
+                st.write('Start Time : ',start_datetime,)
+                st.write('Start Time : ',end_datetime)
 
                 #filter data by datetime
                 filtered_data_by_datetime = data_filter_by_time(df, selected_datetime, start_datetime.hour, end_datetime.hour)
@@ -286,8 +358,8 @@ def beranda_logged_in():
                 if not filtered_data_by_datetime['Date-Time'].isna().all():
                     data_visual_of_drilling_by_hour(filtered_data_by_datetime)
 
-        elif visual_option == "Sumur B":
-            st.header('Sumur B')
+        elif visual_option == "Well B":
+            st.header('Well B')
             well_path = os.path.abspath('WELL_B.csv')
             df = pd.read_csv(well_path)
             st.dataframe(df)
@@ -297,8 +369,8 @@ def beranda_logged_in():
             start_datetime, end_datetime, selected_datetime = time_range_filter()
 
             if start_datetime is not None and end_datetime is not None and selected_datetime is not None:
-                st.write('Jam Mulai : ',start_datetime,)
-                st.write('Jam Mulai : ',end_datetime)
+                st.write('Start Time : ',start_datetime,)
+                st.write('Start Time : ',end_datetime)
 
                 #filter data by datetime
                 filtered_data_by_datetime = data_filter_by_time(df, selected_datetime, start_datetime.hour, end_datetime.hour)
@@ -308,8 +380,8 @@ def beranda_logged_in():
                 if not filtered_data_by_datetime['Date-Time'].isna().all():
                     data_visual_of_drilling_by_hour(filtered_data_by_datetime)
 
-        if visual_option == "Sumur C":
-            st.header('Sumur C')
+        if visual_option == "Well C":
+            st.header('Well C')
             well_path = os.path.abspath('WELL_C.csv')
             df = pd.read_csv(well_path)
             st.dataframe(df)
@@ -319,8 +391,8 @@ def beranda_logged_in():
             start_datetime, end_datetime, selected_datetime = time_range_filter()
 
             if start_datetime is not None and end_datetime is not None and selected_datetime is not None:
-                st.write('Jam Mulai : ',start_datetime,)
-                st.write('Jam Mulai : ',end_datetime)
+                st.write('Start Time : ',start_datetime,)
+                st.write('Start Time : ',end_datetime)
 
                 #filter data by datetime
                 filtered_data_by_datetime = data_filter_by_time(df, selected_datetime, start_datetime.hour, end_datetime.hour)
@@ -331,8 +403,8 @@ def beranda_logged_in():
                     data_visual_of_drilling_by_hour(filtered_data_by_datetime)
 
            
-    if selected == 'Visualisasi':
-          st.write('Berikut adalah visualisasi berdasarkan data pengeboran')
+    if selected == 'Visualization':
+          st.write('Below is a visualization based on drilling data')
 
 # Check authentication status
 name, authentication_status, username = authenticator.login("sidebar")
@@ -359,11 +431,11 @@ if st.session_state["authentication_status"]:
     # st.session_state.rerun_called = False
 
 elif st.session_state["authentication_status"] is False:
-    st.sidebar.error('Username/password anda salah')
+    st.sidebar.error('Your username or password is incorrect')
     beranda()
     register()
     
 elif st.session_state["authentication_status"] is None:
-    st.sidebar.warning('Silakan masukkan username dan password anda')
+    st.sidebar.warning('Please enter your username and password')
     beranda()
     register()
