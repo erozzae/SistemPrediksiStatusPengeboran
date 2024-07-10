@@ -147,15 +147,18 @@ def data_visual_of_drilling_by_hour(filtered_data_by_datetime):
     # Judul aplikasi
     st.title('Data Visualization')
 
-    # Multiselect untuk memilih kolom
-    # columns = st.multiselect('Pilih kolom untuk divisualisasikan', filtered_data_by_datetime.iloc[:,1:].columns)
+    # Menambahkan jitter ke nilai Value
+    jitter_amount = 0.1  # Adjust this value as needed
+    def add_jitter(data, jitter_amount):
+        data['Value'] += np.random.uniform(-jitter_amount, jitter_amount, size=len(data))
+        return data
     
     #Visualisasi
     # Mengubah data dari wide format ke long format
-    datas_1 = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,1:7].columns)
-    datas_2 = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,7:13].columns)
-    datas_3 = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,13:18].columns)
-    datas_4 = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,18:22].columns)
+    datas_1 = add_jitter(filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,1:7].columns),jitter_amount)
+    datas_2 = add_jitter(filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,7:13].columns),jitter_amount)
+    datas_3 = add_jitter(filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,13:18].columns),jitter_amount)
+    datas_4 = add_jitter(filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,18:22].columns), jitter_amount)
     # Membuat layout grid dengan 2 kolom dan 2 baris
     col1, col2 = st.columns(2)
     col3, col4 = st.columns(2)
@@ -221,27 +224,6 @@ def data_visual_of_drilling_by_hour(filtered_data_by_datetime):
 
         # Tampilkan plot menggunakan st.altair_chart
         st.altair_chart(chart, use_container_width=True)
-
-    # Visualisasi dengan Altair jika ada kolom yang dipilih
-    # if columns:       
-    #     # Mengubah data dari wide format ke long format
-    #     data_long = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=columns)
-                        
-    #     # Inisialisasi chart dengan Altair
-    #     chart = alt.Chart(data_long).mark_line().encode(
-    #         x='Date-Time:T',  # Menggunakan kolom 'Date-Time' sebagai sumbu x
-    #         y='Value:Q',  # Menggunakan nilai dari kolom yang dipilih sebagai sumbu y
-    #         color='Variable:N',  # Warna berdasarkan kolom yang dipilih
-    #         tooltip=['Date-Time', 'Variable', 'Value']  # Menampilkan tooltip dengan kolom yang relevan
-    #     ).properties(
-    #          width=800,
-    #         height=400
-    #     ).interactive()
-
-    #     # Tampilkan plot menggunakan st.altair_chart
-    #     st.altair_chart(chart, use_container_width=True)
-    # else:
-    #     st.write('Pilih setidaknya satu kolom untuk memulai visualisasi.')
 
 def data_filter_by_time(df, start_date, end_date, start_hour, end_hour):
     df['Date-Time'] = pd.to_datetime(df['Date-Time'])
@@ -396,7 +378,6 @@ def beranda_logged_in():
                 if start_datetime is not None and end_datetime is not None and selected_start_date is not None and selected_end_date is not None:
                     st.write('Start Time : ', start_datetime)
                     st.write('Start Time : ', end_datetime)
-                    # st.write('Start Time : ', selected_start_date)
 
                     # #filter data by datetime
                     filtered_data_by_datetime = data_filter_by_time(df, selected_start_date, selected_end_date, start_datetime.hour, end_datetime.hour)
