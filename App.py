@@ -249,21 +249,26 @@ def time_range_filter():
     # Filter Jam Awal
     selected_start_hour = st.selectbox(
         'Select Start Time:',
-        [time(hour) for hour in range(24)]
+        [None] + [time(hour) for hour in range(24)],
+        format_func=lambda x: x.strftime('%H:%M') if x else 'Select Time'
     )
 
     # Filter Jam Akhir
     selected_end_hour = st.selectbox(
         'Select End Time:',
-        [time(hour) for hour in range(24)]
+        [None] + [time(hour) for hour in range(24)],
+        format_func=lambda x: x.strftime('%H:%M') if x else 'Select Time'
     )
 
-    # Validasi jam akhir harus setelah jam awal
+    # Validasi input
+    if selected_start_hour is None or selected_end_hour is None:
+        st.error('Please select both start and end times.')
+        return None, None, None, None
+
     if selected_end_hour < selected_start_hour:
         st.error('The ending time must be after the starting time.')
         return None, None, None, None
 
-    # Konversi tanggal dan waktu yang dipilih menjadi objek datetime lengkap
     if selected_start_date and selected_end_date:
         if selected_end_date < selected_start_date:
             st.error('The ending date must be after the starting date.')
@@ -272,6 +277,8 @@ def time_range_filter():
         start_datetime = datetime.combine(selected_start_date, selected_start_hour)
         end_datetime = datetime.combine(selected_end_date, selected_end_hour)
         return start_datetime, end_datetime, selected_start_date, selected_end_date
+
+    return None, None, None, None
 
 def beranda_logged_in():
     connection = create_connection("localhost", "root", "", "prediksi_pengeboran")
