@@ -11,12 +11,15 @@ from yaml.loader import SafeLoader
 from streamlit_option_menu import option_menu
 from PIL import Image
 import json
-from datetime import datetime, time, timedelta
+from datetime import datetime, time
 
  #visualisation             
 import matplotlib.pyplot as plt 
 import seaborn as sns  
 sns.set(color_codes=True)
+
+import mysql.connector
+from mysql.connector import Error
 
 st.set_page_config(
     page_title="Aplikasi Prediksi Status Pengeboran",
@@ -33,6 +36,34 @@ with open('auth.yaml') as file:
         config['cookie']['expiry_days'],
         config['pre-authorized']
 )
+    
+# Fungsi untuk membuat koneksi ke database MySQL
+def create_connection(host_name, user_name, user_password, db_name):
+    connection = None
+    try:
+        connection = mysql.connector.connect(
+            host=host_name,
+            user=user_name,
+            passwd=user_password,
+            database=db_name
+        )
+        # st.success("Connection to MySQL DB successful")
+    except Error as e:
+        st.error(f"The error '{e}' occurred")
+    return connection
+
+# Fungsi untuk menjalankan query dan mengembalikan hasil sebagai DataFrame
+def read_query(connection, query):
+    cursor = connection.cursor()
+    result = None
+    try:
+        cursor.execute(query)
+        result = cursor.fetchall()
+        columns = [i[0] for i in cursor.description]
+        return pd.DataFrame(result, columns=columns)
+    except Error as e:
+        st.error(f"The error '{e}' occurred")
+        return None
 
 # Inisialisasi state
 if 'rerun_called' not in st.session_state:
@@ -59,7 +90,6 @@ def load_excel_file(uploaded_file):
         st.error(f"An error occurred while reading the file: {e}")
         return None
 
-
 def beranda():
     st.title('Welcome!!')
     st.write('In the Drilling Status Prediction System Application of PT. Parama Data Unit')
@@ -75,12 +105,16 @@ def stuck_percentage(df):
     # Hitung jumlah kemunculan tiap nilai
     count_values = df['Stuck'].value_counts(normalize=True) * 100
 
+    # Menggunakan get untuk menghindari error jika nilai tidak ditemukan
+    normal_percentage = count_values.get(0, 0)
+    stuck_percentage = count_values.get(1, 0)
+    
     # Konversi ke DataFrame untuk visualisasi
     count_df = pd.DataFrame({
         'Status': ['Normal', 'Stuck'],
-        'Percentage': [count_values[0], count_values[1]],
+        'Percentage': [normal_percentage, stuck_percentage],
     })
-
+    
     # Buat chart menggunakan Altair
     bar_chart = alt.Chart(count_df).mark_bar().encode(
         x=alt.X('Status', sort=['Normal', 'Stuck']),
@@ -113,15 +147,18 @@ def data_visual_of_drilling_by_hour(filtered_data_by_datetime):
     # Judul aplikasi
     st.title('Data Visualization')
 
-    # Multiselect untuk memilih kolom
-    # columns = st.multiselect('Pilih kolom untuk divisualisasikan', filtered_data_by_datetime.iloc[:,1:].columns)
+    # Menambahkan jitter ke nilai Value
+    jitter_amount = 0.1  # Adjust this value as needed
+    def add_jitter(data, jitter_amount):
+        data['Value'] += np.random.uniform(-jitter_amount, jitter_amount, size=len(data))
+        return data
     
     #Visualisasi
     # Mengubah data dari wide format ke long format
-    datas_1 = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,1:7].columns)
-    datas_2 = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,7:13].columns)
-    datas_3 = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,13:18].columns)
-    datas_4 = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,18:22].columns)
+    datas_1 = add_jitter(filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,1:7].columns),jitter_amount)
+    datas_2 = add_jitter(filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,7:13].columns),jitter_amount)
+    datas_3 = add_jitter(filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,13:18].columns),jitter_amount)
+    datas_4 = add_jitter(filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,18:22].columns), jitter_amount)
     # Membuat layout grid dengan 2 kolom dan 2 baris
     col1, col2 = st.columns(2)
     col3, col4 = st.columns(2)
@@ -188,67 +225,63 @@ def data_visual_of_drilling_by_hour(filtered_data_by_datetime):
         # Tampilkan plot menggunakan st.altair_chart
         st.altair_chart(chart, use_container_width=True)
 
-    # Visualisasi dengan Altair jika ada kolom yang dipilih
-    # if columns:       
-    #     # Mengubah data dari wide format ke long format
-    #     data_long = filtered_data_by_datetime.melt('Date-Time', var_name='Variable', value_name='Value', value_vars=columns)
-                        
-    #     # Inisialisasi chart dengan Altair
-    #     chart = alt.Chart(data_long).mark_line().encode(
-    #         x='Date-Time:T',  # Menggunakan kolom 'Date-Time' sebagai sumbu x
-    #         y='Value:Q',  # Menggunakan nilai dari kolom yang dipilih sebagai sumbu y
-    #         color='Variable:N',  # Warna berdasarkan kolom yang dipilih
-    #         tooltip=['Date-Time', 'Variable', 'Value']  # Menampilkan tooltip dengan kolom yang relevan
-    #     ).properties(
-    #          width=800,
-    #         height=400
-    #     ).interactive()
-
-    #     # Tampilkan plot menggunakan st.altair_chart
-    #     st.altair_chart(chart, use_container_width=True)
-    # else:
-    #     st.write('Pilih setidaknya satu kolom untuk memulai visualisasi.')
-
-def data_filter_by_time(df, date, start_hour, end_hour):
+def data_filter_by_time(df, start_date, end_date, start_hour, end_hour):
     df['Date-Time'] = pd.to_datetime(df['Date-Time'])
+    
+    # Mengonversi tanggal dan waktu mulai
+    start_datetime = pd.to_datetime(start_date) + pd.to_timedelta(start_hour, unit='h')
+    
+    # Mengonversi tanggal dan waktu akhir
+    end_datetime = pd.to_datetime(end_date) + pd.to_timedelta(end_hour, unit='h')
 
-    # Filter data untuk waktu tertentu antara start_hour dan end_hour
-    filtered_data = df[(df['Date-Time'].dt.date == pd.to_datetime(date).date()) &
-                       (df['Date-Time'].dt.hour >= start_hour) &
-                       (df['Date-Time'].dt.hour < end_hour)]
-
+    # Menyaring data berdasarkan rentang waktu yang diberikan
+    filtered_data = df[(df['Date-Time'] >= start_datetime) & (df['Date-Time'] < end_datetime)]
+    
     return filtered_data
 
 def time_range_filter():
     st.title('Time Filter')
 
-    # Filter Tanggal (hanya satu tanggal)
-    selected_date = st.date_input('Select Date')
+    # Filter Tanggal (rentang tanggal)
+    selected_start_date = st.date_input('Select Start Date', key='start_date')
+    selected_end_date = st.date_input('Select End Date', key='end_date')
 
     # Filter Jam Awal
     selected_start_hour = st.selectbox(
         'Select Start Time:',
-        [time(hour) for hour in range(24)]
+        [None] + [time(hour) for hour in range(24)],
+        format_func=lambda x: x.strftime('%H:%M') if x else 'Select Time'
     )
 
     # Filter Jam Akhir
     selected_end_hour = st.selectbox(
         'Select End Time:',
-        [time(hour) for hour in range(24)]
+        [None] + [time(hour) for hour in range(24)],
+        format_func=lambda x: x.strftime('%H:%M') if x else 'Select Time'
     )
 
-    # Validasi jam akhir harus setelah jam awal
+    # Validasi input
+    if selected_start_hour is None or selected_end_hour is None:
+        st.error('Please select both start and end times.')
+        return None, None, None, None
+
     if selected_end_hour < selected_start_hour:
         st.error('The ending time must be after the starting time.')
-        return None, None, None
+        return None, None, None, None
 
-    # Konversi tanggal dan waktu yang dipilih menjadi objek datetime lengkap
-    if selected_date:
-        start_datetime = datetime.combine(selected_date, selected_start_hour)
-        end_datetime = datetime.combine(selected_date, selected_end_hour)
-        return start_datetime, end_datetime, selected_date
+    if selected_start_date and selected_end_date:
+        if selected_end_date < selected_start_date:
+            st.error('The ending date must be after the starting date.')
+            return None, None, None, None
+
+        start_datetime = datetime.combine(selected_start_date, selected_start_hour)
+        end_datetime = datetime.combine(selected_end_date, selected_end_hour)
+        return start_datetime, end_datetime, selected_start_date, selected_end_date
+
+    return None, None, None, None
 
 def beranda_logged_in():
+    connection = create_connection("localhost", "root", "", "prediksi_pengeboran")
     with st.sidebar:
         selected=option_menu(
             menu_title='Menu',
@@ -338,25 +371,28 @@ def beranda_logged_in():
         selected_data = st.session_state.get('data_frame')
         if visual_option == "Well A":
             st.header('Well A')
-            well_path = os.path.abspath('WELL_A.csv')
-            df = pd.read_csv(well_path)
-            st.dataframe(df)
-            stuck_percentage(df)
+            # well_path = os.path.abspath('WELL_A.csv')
+            # df = pd.read_csv(well_path)
+            # stuck_percentage(df)
+            df = read_query(connection, "SELECT*FROM well_a")
+            if df is not None:
+                st.dataframe(df)
+                stuck_percentage(df)
 
-            #set datetime
-            start_datetime, end_datetime, selected_datetime = time_range_filter()
+                #set datetime
+                start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
 
-            if start_datetime is not None and end_datetime is not None and selected_datetime is not None:
-                st.write('Start Time : ',start_datetime,)
-                st.write('Start Time : ',end_datetime)
+                if start_datetime is not None and end_datetime is not None and selected_start_date is not None and selected_end_date is not None:
+                    st.write('Start Time : ', start_datetime)
+                    st.write('Start Time : ', end_datetime)
 
-                #filter data by datetime
-                filtered_data_by_datetime = data_filter_by_time(df, selected_datetime, start_datetime.hour, end_datetime.hour)
-                st.dataframe(filtered_data_by_datetime)
+                    # #filter data by datetime
+                    filtered_data_by_datetime = data_filter_by_time(df, selected_start_date, selected_end_date, start_datetime.hour, end_datetime.hour)
+                    st.dataframe(filtered_data_by_datetime)
 
-                # data visualization of drilling
-                if not filtered_data_by_datetime['Date-Time'].isna().all():
-                    data_visual_of_drilling_by_hour(filtered_data_by_datetime)
+                    # data visualization of drilling
+                    if not filtered_data_by_datetime['Date-Time'].isna().all():
+                        data_visual_of_drilling_by_hour(filtered_data_by_datetime)
 
         elif visual_option == "Well B":
             st.header('Well B')
@@ -366,14 +402,15 @@ def beranda_logged_in():
             stuck_percentage(df)
 
             #set datetime
-            start_datetime, end_datetime, selected_datetime = time_range_filter()
+            start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
 
-            if start_datetime is not None and end_datetime is not None and selected_datetime is not None:
-                st.write('Start Time : ',start_datetime,)
-                st.write('Start Time : ',end_datetime)
+            if start_datetime is not None and end_datetime is not None and selected_start_date is not None and selected_end_date is not None:
+                st.write('Start Time : ', start_datetime)
+                st.write('Start Time : ', end_datetime)
+                # st.write('Start Time : ', selected_start_date)
 
-                #filter data by datetime
-                filtered_data_by_datetime = data_filter_by_time(df, selected_datetime, start_datetime.hour, end_datetime.hour)
+                # #filter data by datetime
+                filtered_data_by_datetime = data_filter_by_time(df, selected_start_date, selected_end_date, start_datetime.hour, end_datetime.hour)
                 st.dataframe(filtered_data_by_datetime)
 
                 # data visualization of drilling
@@ -388,14 +425,15 @@ def beranda_logged_in():
             stuck_percentage(df)
 
             #set datetime
-            start_datetime, end_datetime, selected_datetime = time_range_filter()
+            start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
 
-            if start_datetime is not None and end_datetime is not None and selected_datetime is not None:
-                st.write('Start Time : ',start_datetime,)
-                st.write('Start Time : ',end_datetime)
+            if start_datetime is not None and end_datetime is not None and selected_start_date is not None and selected_end_date is not None:
+                st.write('Start Time : ', start_datetime)
+                st.write('Start Time : ', end_datetime)
+                # st.write('Start Time : ', selected_start_date)
 
-                #filter data by datetime
-                filtered_data_by_datetime = data_filter_by_time(df, selected_datetime, start_datetime.hour, end_datetime.hour)
+                # #filter data by datetime
+                filtered_data_by_datetime = data_filter_by_time(df, selected_start_date, selected_end_date, start_datetime.hour, end_datetime.hour)
                 st.dataframe(filtered_data_by_datetime)
 
                 # data visualization of drilling
