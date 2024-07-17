@@ -11,7 +11,7 @@ from yaml.loader import SafeLoader
 from streamlit_option_menu import option_menu
 from PIL import Image
 import json
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
  #visualisation             
 import matplotlib.pyplot as plt 
@@ -273,6 +273,12 @@ def time_range_filter():
         if selected_end_date < selected_start_date:
             st.error('The ending date must be after the starting date.')
             return None, None, None, None
+        
+        # Validasi rentang waktu maksimal 3 hari
+        max_range = timedelta(days=3)
+        if selected_end_date - selected_start_date > max_range:
+            st.error('The date range must not exceed 3 days.')
+            return None, None, None, None
 
         start_datetime = datetime.combine(selected_start_date, selected_start_hour)
         end_datetime = datetime.combine(selected_end_date, selected_end_hour)
@@ -281,7 +287,7 @@ def time_range_filter():
     return None, None, None, None
 
 def beranda_logged_in():
-    connection = create_connection("localhost", "root", "", "prediksi_pengeboran")
+    connection = create_connection("erozz911.my.id", "erop3494_prediksi_pengeboran_admin", "Uzo12345_!", "erop3494_prediksi_pengeboran")
     with st.sidebar:
         selected=option_menu(
             menu_title='Menu',
@@ -290,7 +296,7 @@ def beranda_logged_in():
         )
     if selected == "Prediction":
         st.write('Please make predictions about drilling status')
-        model_path = os.path.abspath('knn_model_ph10.pkl')
+        model_path = os.path.abspath('hgb_model.pkl')
         loaded_model = joblib.load(model_path)
 
         drilling_data_json = st.text_area("Input drilling data (JSON)")
