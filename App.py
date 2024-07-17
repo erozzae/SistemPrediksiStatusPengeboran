@@ -402,26 +402,29 @@ def beranda_logged_in():
 
         elif visual_option == "Well B":
             st.header('Well B')
-            well_path = os.path.abspath('WELL_B.csv')
-            df = pd.read_csv(well_path)
-            st.dataframe(df)
-            stuck_percentage(df)
+            # well_path = os.path.abspath('WELL_B.csv')
+            # df = pd.read_csv(well_path)
+            # st.dataframe(df)
+            # stuck_percentage(df)
+            df = read_query(connection, "SELECT*FROM well_a")
+            if df is not None:
+                st.dataframe(df)
+                stuck_percentage(df)
 
-            #set datetime
-            start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
+                #set datetime
+                start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
 
-            if start_datetime is not None and end_datetime is not None and selected_start_date is not None and selected_end_date is not None:
-                st.write('Start Time : ', start_datetime)
-                st.write('Start Time : ', end_datetime)
-                # st.write('Start Time : ', selected_start_date)
+                if start_datetime is not None and end_datetime is not None and selected_start_date is not None and selected_end_date is not None:
+                    st.write('Start Time : ', start_datetime)
+                    st.write('Start Time : ', end_datetime)
 
-                # #filter data by datetime
-                filtered_data_by_datetime = data_filter_by_time(df, selected_start_date, selected_end_date, start_datetime.hour, end_datetime.hour)
-                st.dataframe(filtered_data_by_datetime)
+                    # #filter data by datetime
+                    filtered_data_by_datetime = data_filter_by_time(df, selected_start_date, selected_end_date, start_datetime.hour, end_datetime.hour)
+                    st.dataframe(filtered_data_by_datetime)
 
-                # data visualization of drilling
-                if not filtered_data_by_datetime['Date-Time'].isna().all():
-                    data_visual_of_drilling_by_hour(filtered_data_by_datetime)
+                    # data visualization of drilling
+                    if not filtered_data_by_datetime['Date-Time'].isna().all():
+                        data_visual_of_drilling_by_hour(filtered_data_by_datetime)
 
         if visual_option == "Well C":
             st.header('Well C')
