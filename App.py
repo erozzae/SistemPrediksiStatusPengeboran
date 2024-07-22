@@ -324,7 +324,8 @@ def time_range_filter():
     return None, None, None, None
 
 def beranda_logged_in():
-    connection = create_connection("erozz911.my.id", "erop3494_prediksi_pengeboran_admin", "Uzo12345_!", "erop3494_prediksi_pengeboran")
+    # print(st.secrets["db_host"])
+    connection = create_connection(st.secrets["db_host"], st.secrets["db_username"], st.secrets["db_password"], st.secrets["db_database"])
     with st.sidebar:
         selected=option_menu(
             menu_title='Menu',
@@ -510,9 +511,9 @@ if st.session_state["authentication_status"]:
 elif st.session_state["authentication_status"] is False:
     st.sidebar.error('Your username or password is incorrect')
     beranda()
-    register()
+    # register()
     
 elif st.session_state["authentication_status"] is None:
     st.sidebar.warning('Please enter your username and password')
     beranda()
-    register()
+    # register()
