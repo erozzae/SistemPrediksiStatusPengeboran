@@ -324,7 +324,6 @@ def time_range_filter():
     return None, None, None, None
 
 def beranda_logged_in():
-    # print(st.secrets["db_host"])
     connection = create_connection(st.secrets["db_host"], st.secrets["db_username"], st.secrets["db_password"], st.secrets["db_database"])
     with st.sidebar:
         selected=option_menu(
