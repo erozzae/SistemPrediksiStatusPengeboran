@@ -47,6 +47,7 @@ def create_connection(host_name, user_name, user_password, db_name):
         # Buat koneksi menggunakan sqlalchemy create_engine
         engine = create_engine(f'mysql+mysqlconnector://{user_name}:{user_password}@{host_name}/{db_name}')
         connection = engine.connect()
+        st.info('sukses konek')
         print("Connection to MySQL DB successful")
     except Exception as e:
         print(f"The error '{e}' occurred")
@@ -324,7 +325,7 @@ def time_range_filter():
     return None, None, None, None
 
 def beranda_logged_in():
-    # connection = create_connection(st.secrets["db_host"], st.secrets["db_username"], st.secrets["db_password"], st.secrets["db_database"])
+    connection = create_connection(st.secrets["db_host"], st.secrets["db_username"], st.secrets["db_password"], st.secrets["db_database"])
     with st.sidebar:
         selected=option_menu(
             menu_title='Menu',
