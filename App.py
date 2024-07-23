@@ -90,11 +90,11 @@ if 'data_visual_2' not in st.session_state:
 if 'data_visual_2' not in st.session_state:
     st.session_state['data_visual_2'] = None
 
-# Fungsi untuk memanggil st.experimental_rerun() sekali saja
+# Fungsi untuk memanggil st._rerun() sekali saja
 def run_once():
     if not st.session_state.rerun_called:
         st.session_state.rerun_called = True
-        st.experimental_rerun()
+        st.rerun()
 
 def beranda():
     st.title('Welcome!!')
@@ -167,11 +167,6 @@ def data_visual_of_drilling_by_hour(filtered_data_by_datetime):
     columns_g3 = filtered_data_by_datetime.columns[13:18]
     columns_g4 = filtered_data_by_datetime.columns[18:23]
     
-    # Mengubah data dari wide format ke long format
-    # datas_1 = add_jitter(filtered_data_by_datetime.melt('Date_Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,1:7].columns),jitter_amount)
-    # datas_2 = add_jitter(filtered_data_by_datetime.melt('Date_Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,7:13].columns),jitter_amount)
-    # datas_3 = add_jitter(filtered_data_by_datetime.melt('Date_Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,13:18].columns),jitter_amount)
-    # datas_4 = add_jitter(filtered_data_by_datetime.melt('Date_Time', var_name='Variable', value_name='Value', value_vars=filtered_data_by_datetime.iloc[:,18:22].columns), jitter_amount)
     
     # Membuat layout grid dengan 2 kolom dan 2 baris
     col1, col2 = st.columns(2)
@@ -362,7 +357,6 @@ def beranda_logged_in():
 
                 except ValueError as e:
                     st.error(f"Error converting JSON to DataFrame: {e}")
-                    # st.error("Terjadi kesalahan")
 
             else:
                 st.info("Please enter the last five minutes of drilling data (30 data sets)")
@@ -403,82 +397,81 @@ def beranda_logged_in():
         else:
             st.info("Please enter the last five minutes of drilling data (30 data sets)")
 
-    if selected == "Data Source":
-        # st.write('The following is the drilling data source')
-
-        with st.sidebar:
-            visual_option = st.selectbox(
-                "Select a data source",
-                ["Well A", "Well B", "Well C"]
-            )
-
-        # selected_data = st.session_state.get('data_frame')
+    # if selected == "Data Source":
         
-        if visual_option == "Well A":
-            #avilable date range 
-            avlb_date = get_date_range(connection,"well_a")
-            if avlb_date is not None :
-                st.write('Available Start Time from Data Sources : ', avlb_date.iloc[0,0])
-                st.write('Available End Time from Data Sources : ', avlb_date.iloc[0,1])
+    #     with st.sidebar:
+    #         visual_option = st.selectbox(
+    #             "Select a data source",
+    #             ["Well A", "Well B", "Well C"]
+    #         )
 
-            #set datetime
-            start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
+    #     # selected_data = st.session_state.get('data_frame')
+        
+    #     if visual_option == "Well A":
+    #         #avilable date range 
+    #         avlb_date = get_date_range(connection,"well_a")
+    #         if avlb_date is not None :
+    #             st.write('Available Start Time from Data Sources : ', avlb_date.iloc[0,0])
+    #             st.write('Available End Time from Data Sources : ', avlb_date.iloc[0,1])
 
-            if start_datetime is not None and end_datetime is not None and selected_start_date is not None and selected_end_date is not None:
-                st.write('Start Time : ', start_datetime)
-                st.write('End Time : ', end_datetime)
+    #         #set datetime
+    #         start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
 
-                # #filter data by datetime
-                filtered_data_by_datetime = data_filter_by_time(connection, "well_a", selected_start_date, selected_end_date, start_datetime.hour, end_datetime.hour)
-                st.dataframe(filtered_data_by_datetime)
+    #         if start_datetime is not None and end_datetime is not None and selected_start_date is not None and selected_end_date is not None:
+    #             st.write('Start Time : ', start_datetime)
+    #             st.write('End Time : ', end_datetime)
 
-                # data visualization of drilling
-                if not filtered_data_by_datetime['Date_Time'].isna().all():
-                    data_visual_of_drilling_by_hour(filtered_data_by_datetime)
+    #             # #filter data by datetime
+    #             filtered_data_by_datetime = data_filter_by_time(connection, "well_a", selected_start_date, selected_end_date, start_datetime.hour, end_datetime.hour)
+    #             st.dataframe(filtered_data_by_datetime)
 
-        elif visual_option == "Well B":
-            #avilable date range 
-            avlb_date = get_date_range(connection,"well_b")
-            if avlb_date is not None :
-                st.write('Available Start Time from Data Sources : ', avlb_date.iloc[0,0])
-                st.write('Available End Time from Data Sources : ', avlb_date.iloc[0,1])
+    #             # data visualization of drilling
+    #             if not filtered_data_by_datetime['Date_Time'].isna().all():
+    #                 data_visual_of_drilling_by_hour(filtered_data_by_datetime)
 
-            #set datetime
-            start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
+    #     elif visual_option == "Well B":
+    #         #avilable date range 
+    #         avlb_date = get_date_range(connection,"well_b")
+    #         if avlb_date is not None :
+    #             st.write('Available Start Time from Data Sources : ', avlb_date.iloc[0,0])
+    #             st.write('Available End Time from Data Sources : ', avlb_date.iloc[0,1])
 
-            if start_datetime is not None and end_datetime is not None and selected_start_date is not None and selected_end_date is not None:
-                st.write('Start Time : ', start_datetime)
-                st.write('End Time : ', end_datetime)
+    #         #set datetime
+    #         start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
 
-                # #filter data by datetime
-                filtered_data_by_datetime = data_filter_by_time(connection, "well_b", selected_start_date, selected_end_date, start_datetime.hour, end_datetime.hour)
-                st.dataframe(filtered_data_by_datetime)
+    #         if start_datetime is not None and end_datetime is not None and selected_start_date is not None and selected_end_date is not None:
+    #             st.write('Start Time : ', start_datetime)
+    #             st.write('End Time : ', end_datetime)
 
-                # data visualization of drilling
-                if not filtered_data_by_datetime['Date_Time'].isna().all():
-                    data_visual_of_drilling_by_hour(filtered_data_by_datetime)
+    #             # #filter data by datetime
+    #             filtered_data_by_datetime = data_filter_by_time(connection, "well_b", selected_start_date, selected_end_date, start_datetime.hour, end_datetime.hour)
+    #             st.dataframe(filtered_data_by_datetime)
+
+    #             # data visualization of drilling
+    #             if not filtered_data_by_datetime['Date_Time'].isna().all():
+    #                 data_visual_of_drilling_by_hour(filtered_data_by_datetime)
                     
-        elif visual_option == "Well C":
-            #avilable date range 
-            avlb_date = get_date_range(connection,"well_c")
-            if avlb_date is not None :
-                st.write('Available Start Time from Data Sources : ', avlb_date.iloc[0,0])
-                st.write('Available End Time from Data Sources : ', avlb_date.iloc[0,1])
+    #     elif visual_option == "Well C":
+    #         #avilable date range 
+    #         avlb_date = get_date_range(connection,"well_c")
+    #         if avlb_date is not None :
+    #             st.write('Available Start Time from Data Sources : ', avlb_date.iloc[0,0])
+    #             st.write('Available End Time from Data Sources : ', avlb_date.iloc[0,1])
 
-            #set datetime
-            start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
+    #         #set datetime
+    #         start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
 
-            if start_datetime is not None and end_datetime is not None and selected_start_date is not None and selected_end_date is not None:
-                st.write('Start Time : ', start_datetime)
-                st.write('End Time : ', end_datetime)
+    #         if start_datetime is not None and end_datetime is not None and selected_start_date is not None and selected_end_date is not None:
+    #             st.write('Start Time : ', start_datetime)
+    #             st.write('End Time : ', end_datetime)
 
-                # #filter data by datetime
-                filtered_data_by_datetime = data_filter_by_time(connection, "well_c", selected_start_date, selected_end_date, start_datetime.hour, end_datetime.hour)
-                st.dataframe(filtered_data_by_datetime)
+    #             # #filter data by datetime
+    #             filtered_data_by_datetime = data_filter_by_time(connection, "well_c", selected_start_date, selected_end_date, start_datetime.hour, end_datetime.hour)
+    #             st.dataframe(filtered_data_by_datetime)
 
-                # data visualization of drilling
-                if not filtered_data_by_datetime['Date_Time'].isna().all():
-                    data_visual_of_drilling_by_hour(filtered_data_by_datetime)
+    #             # data visualization of drilling
+    #             if not filtered_data_by_datetime['Date_Time'].isna().all():
+    #                 data_visual_of_drilling_by_hour(filtered_data_by_datetime)
 
 
 # Check authentication status
