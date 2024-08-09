@@ -29,6 +29,11 @@ st.set_page_config(
     page_icon="🎯",
 )
 
+# db_host = "integral-education.pudingbesar.com"
+# db_database = "u483345376_drillingdb"
+# db_username = "u483345376_eros"
+# db_password = "Eros12345_"
+
 with open('auth.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
@@ -328,10 +333,10 @@ def beranda_logged_in():
         )
     if selected == "Prediction":
         st.write('Please make predictions about drilling status')
-        model_path = os.path.abspath('hgb_model.pkl')
+        model_path = os.path.abspath('dt_model.pkl')
         loaded_model = joblib.load(model_path)
 
-        drilling_data_json = st.text_area("Input drilling data (JSON)")
+        drilling_data_json = st.text_area("Input drilling data (JSON)", height=300)
         pred_btn = st.button("Prediction", type="primary")
 
         if 'data_frame' not in st.session_state:
@@ -363,7 +368,7 @@ def beranda_logged_in():
             if st.session_state['data_frame'] is not None:
                 try:
                     # Meenyeleksi kolom
-                    selected_data = st.session_state['data_frame'][['LogDepth','BitDepth','BVDepth','Hkld','Scfm']]
+                    selected_data = st.session_state['data_frame'][['Scfm','Hkld','BitDepth','BVDepth','LogDepth']]
 
                     # Data Preprocessing
                     selected_data_np = np.array(selected_data)
@@ -375,7 +380,7 @@ def beranda_logged_in():
                     # Menggunakan model yang dimuat untuk membuat prediksi
                     predictions = loaded_model.predict(X_Test)
 
-                    st.write('Previously uploaded data')
+                    st.write('Previously uploaded data :')
 
                     st.dataframe(st.session_state['data_frame'])
 
@@ -410,8 +415,9 @@ def beranda_logged_in():
             #avilable date range 
             avlb_date = get_date_range(connection,"well_a")
             if avlb_date is not None :
-                st.write('Available Start Time from Data Sources : ', avlb_date.iloc[0,0])
-                st.write('Available End Time from Data Sources : ', avlb_date.iloc[0,1])
+                st.info('Data Availability')
+                st.success(f"Available Start Time from Data Sources: {avlb_date.iloc[0, 0]}")
+                st.success(f"Available End Time from Data Sources: {avlb_date.iloc[0, 1]}")
 
             #set datetime
             start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
@@ -432,9 +438,9 @@ def beranda_logged_in():
             #avilable date range 
             avlb_date = get_date_range(connection,"well_b")
             if avlb_date is not None :
-                st.write('Available Start Time from Data Sources : ', avlb_date.iloc[0,0])
-                st.write('Available End Time from Data Sources : ', avlb_date.iloc[0,1])
-
+                st.info('Data Availability')
+                st.success(f"Available Start Time from Data Sources: {avlb_date.iloc[0, 0]}")
+                st.success(f"Available End Time from Data Sources: {avlb_date.iloc[0, 1]}")
             #set datetime
             start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
 
@@ -454,8 +460,9 @@ def beranda_logged_in():
             #avilable date range 
             avlb_date = get_date_range(connection,"well_c")
             if avlb_date is not None :
-                st.write('Available Start Time from Data Sources : ', avlb_date.iloc[0,0])
-                st.write('Available End Time from Data Sources : ', avlb_date.iloc[0,1])
+                st.info('Data Availability')
+                st.success(f"Available Start Time from Data Sources: {avlb_date.iloc[0, 0]}")
+                st.success(f"Available End Time from Data Sources: {avlb_date.iloc[0, 1]}")
 
             #set datetime
             start_datetime, end_datetime, selected_start_date, selected_end_date = time_range_filter()
