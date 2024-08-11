@@ -1,25 +1,19 @@
 import streamlit as st
 import streamlit_authenticator as stauth
 import yaml
+
+        
+import os
 import joblib
+
 import pandas as pd
 import numpy as np
 import altair as alt
 from altair import datum
-import os
 from yaml.loader import SafeLoader
 from streamlit_option_menu import option_menu
-from PIL import Image
 import json
 from datetime import datetime, time, timedelta
-
- #visualisation             
-import matplotlib.pyplot as plt 
-import seaborn as sns  
-sns.set(color_codes=True)
-
-import mysql.connector
-from mysql.connector import Error
 
 from sqlalchemy import create_engine
 
@@ -105,52 +99,7 @@ def beranda():
     st.write('In the Drilling Status Prediction System Application of PT. Parama Data Unit')
     st.image("drilling.png", width=200)
 
-@st.cache_resource
-def load_json(file_path):
-    with open(file_path, 'r') as file:
-        data = json.load(file)
-    return data
-
-def stuck_percentage(df):
-    # Hitung jumlah kemunculan tiap nilai
-    count_values = df['Stuck'].value_counts(normalize=True) * 100
-
-    # Menggunakan get untuk menghindari error jika nilai tidak ditemukan
-    normal_percentage = count_values.get(0, 0)
-    stuck_percentage = count_values.get(1, 0)
-    
-    # Konversi ke DataFrame untuk visualisasi
-    count_df = pd.DataFrame({
-        'Status': ['Normal', 'Stuck'],
-        'Percentage': [normal_percentage, stuck_percentage],
-    })
-    
-    # Buat chart menggunakan Altair
-    bar_chart = alt.Chart(count_df).mark_bar().encode(
-        x=alt.X('Status', sort=['Normal', 'Stuck']),
-        y='Percentage',
-        color=alt.condition(
-            alt.datum.Status == 'Stuck',
-            alt.value('#A91D3A'),     # Warna merah untuk 'Stuck'
-            alt.value('#BBE9FF')     # Warna biru untuk 'Normal'
-        )
-    ).properties(
-        title='Persentase Stuck vs Normal'
-    )
-
-    # Tampilkan chart di Streamlit
-    st.altair_chart(bar_chart, use_container_width=True)
-
-def data_visual_of_drilling(df):
-    # Ambil data dari baris pertama untuk visualisasi
-    filtered_data = df.iloc[:,1:]
-    data_first_row = filtered_data.iloc[0]
-
-    # Membuat line chart
-    st.write("Line Chart:")
-    st.line_chart(data_first_row)
-
-def data_visual_of_drilling_by_hour(filtered_data_by_datetime):
+def data_visual_of_drilling(filtered_data_by_datetime):
     # Pastikan kolom 'Date-Time' dalam format datetime
     filtered_data_by_datetime.loc[:, 'Date_Time'] = pd.to_datetime(filtered_data_by_datetime.loc[:, 'Date_Time'])
 
@@ -251,8 +200,6 @@ def data_visual_of_drilling_by_hour(filtered_data_by_datetime):
             st.altair_chart(chart, use_container_width=True)
 
 def data_filter_by_time(connection, table_name, start_date, end_date, start_hour, end_hour):
-    # Membuat koneksi ke database menggunakan SQLAlchemy engine
-    # conn = connection.connect()
 
     # Mengonversi tanggal dan waktu mulai
     start_datetime = pd.to_datetime(start_date) + pd.to_timedelta(start_hour, unit='h')
@@ -265,9 +212,6 @@ def data_filter_by_time(connection, table_name, start_date, end_date, start_hour
 
     # Mengeksekusi query dan mendapatkan hasil dalam bentuk DataFrame
     df = pd.read_sql(query, connection)
-
-    # Menutup koneksi
-    # conn.close()
 
     return df
 
@@ -296,10 +240,6 @@ def time_range_filter():
     if selected_start_hour is None or selected_end_hour is None:
         st.error('Please select both start and end times.')
         return None, None, None, None
-
-    # if selected_end_hour < selected_start_hour:
-    #     st.error('The ending time must be after the starting time.')
-    #     return None, None, None, None
 
     if selected_start_date and selected_end_date:
         if selected_end_date < selected_start_date:
@@ -432,7 +372,7 @@ def beranda_logged_in():
 
                 # data visualization of drilling
                 if not filtered_data_by_datetime['Date_Time'].isna().all():
-                    data_visual_of_drilling_by_hour(filtered_data_by_datetime)
+                    data_visual_of_drilling(filtered_data_by_datetime)
 
         elif visual_option == "Well B":
             #avilable date range 
@@ -454,7 +394,7 @@ def beranda_logged_in():
 
                 # data visualization of drilling
                 if not filtered_data_by_datetime['Date_Time'].isna().all():
-                    data_visual_of_drilling_by_hour(filtered_data_by_datetime)
+                    data_visual_of_drilling(filtered_data_by_datetime)
                     
         elif visual_option == "Well C":
             #avilable date range 
@@ -477,7 +417,7 @@ def beranda_logged_in():
 
                 # data visualization of drilling
                 if not filtered_data_by_datetime['Date_Time'].isna().all():
-                    data_visual_of_drilling_by_hour(filtered_data_by_datetime)
+                    data_visual_of_drilling(filtered_data_by_datetime)
 
 
 # Check authentication status
@@ -500,9 +440,6 @@ if st.session_state["authentication_status"]:
     beranda_logged_in()
     authenticator.logout("Logout", "sidebar")
     run_once()
-
-    ## jika code ini diaktifkan maka jika halaman direfresh saat sudah login, maka otomatis terlogout
-    # st.session_state.rerun_called = False
 
 elif st.session_state["authentication_status"] is False:
     st.sidebar.error('Your username or password is incorrect')
